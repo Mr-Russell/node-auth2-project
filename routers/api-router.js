@@ -10,9 +10,9 @@ const constants = require('../config/constants.js');
 
 function createToken(user){
   const payload = {
-    subject: user.id,
-    username: user.username,
-    department: user.department
+    subject: user[0].id,
+    username: user[0].username,
+    department: user[0].department
   }
   const secret = constants.jwtSecret
   const options = {
@@ -49,6 +49,7 @@ router.post('/login', (req, res)=>{
       .select("*")
       .where({username: req.body.username})
       .then(user => {
+        console.log(user)
         if (user.length === 0) {
           res.status(401).json('Invalid Credentials')
         } else if (user.length > 0 && bcrypt.compareSync(req.body.password, user[0].password)){
@@ -76,12 +77,14 @@ router.get('/users', (req, res)=>{
       if (err) {
         res.status(201).json({message: 'Invalid Token'})
       } else {
+        console.log(decodedToken)
         db('users')
           .select(
             "users.id", 
             "users.username",
             "users.department"
           )
+          .where({department: decodedToken.department})
           .then(users => res.status(200).json(users))
           .catch(err => {
             console.log(err)
